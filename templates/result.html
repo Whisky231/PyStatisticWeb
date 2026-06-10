@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyStatistic — Результаты анализа</title>
+    <meta name="description" content="Результаты статистического анализа данных износа культиваторных лап">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        // Apply saved theme immediately to prevent flash
+        (function () {
+            var theme = localStorage.getItem('pystat-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+</head>
+
+<body>
+    <!-- Theme toggle -->
+    <div class="theme-toggle-wrap">
+        <span class="theme-label" id="themeLabel">Тема</span>
+        <label class="theme-toggle" id="themeToggle" title="Переключить тему">
+            <input type="checkbox" id="themeCheckbox">
+            <span class="theme-toggle__track"></span>
+            <span class="theme-toggle__thumb">
+                <span class="theme-toggle__icon-moon">🌙</span>
+                <span class="theme-toggle__icon-sun">☀️</span>
+            </span>
+        </label>
+    </div>
+
+    <!-- Decorative orbs -->
+    <div class="orb orb--1"></div>
+    <div class="orb orb--2"></div>
+
+    <div class="container">
+        <header class="page-header">
+            <a href="/" class="back-button" id="backBtn">← Назад к вводу данных</a>
+            <h1>📈 Результаты анализа</h1>
+            <p class="page-subtitle">Полный статистический отчет с визуализацией</p>
+        </header>
+
+        <!-- Графики -->
+        <section class="section" id="charts-section">
+            <div class="section-badge section-badge--charts">
+                <span>📊</span> Визуализация
+            </div>
+            <h2>Графики распределения</h2>
+            <div class="plots-container">
+                {% for plot_file in plot_files %}
+                {% if 'variation' not in plot_file and 'epure' not in plot_file and 'profile' not in plot_file and
+                'probability_curve' not in plot_file %}
+                <div class="plot">
+                    <iframe src="{{ url_for('static', filename=plot_file) }}" frameborder="0" scrolling="no"
+                        loading="lazy"></iframe>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Статистические показатели -->
+        <section class="section" id="statistics-section">
+            <div class="section-badge section-badge--stats">
+                <span>🔢</span> Статистика
+            </div>
+            <h2>Статистические показатели</h2>
+            <div class="results-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Показатель</th>
+                            {% for section in sections %}
+                            <th>Сечение {{ section }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Дисперсия</td>
+                            {% for section in sections %}
+                            <td>{{ statistics[section]['variance'] }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td>Минимальное значение</td>
+                            {% for section in sections %}
+                            <td>{{ statistics[section]['minX'] }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td>Максимальное значение</td>
+                            {% for section in sections %}
+                            <td>{{ statistics[section]['maxX'] }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td>Количество интервалов</td>
+                            {% for section in sections %}
+                            <td>{{ statistics[section]['n'] }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td>Протяженность интервала</td>
+                            {% for section in sections %}
+                            <td>{{ statistics[section]['A'] }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td>Начало первого интервала</td>
+                            {% for section in sections %}
+                            <td>{{ statistics[section]['C'] }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td>Среднее значение</td>
+                            {% for section in sections %}
+                            <td>{{ statistics[section]['avg_value_formula'] }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td>Среднее квадратическое отклонение</td>
+                            {% for section in sections %}
+                            <td>{{ statistics[section]['std_dev_formula'] }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td>Коэффициент вариации</td>
+                            {% for section in sections %}
+                            <td>{{ statistics[section]['coef_var_formula'] }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td>Критерий Ирвина (λкр)</td>
+                            {% for section in sections %}
+                            <td>{{ statistics[section]['irwin_criterion'] }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td>λmin</td>
+                            {% for section in sections %}
+                            <td>{{ statistics[section]['lambda_min'] }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td>λmax</td>
+                            {% for section in sections %}
+                            <td>{{ statistics[section]['lambda_max'] }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td>Достоверность информации</td>
+                            {% for section in sections %}
+                            <td>
+                                {% if statistics[section]['is_reliable'] %}
+                                <span style="color: var(--accent-emerald); font-weight: 700;">✓ да</span>
+                                {% else %}
+                                <span style="color: var(--accent-rose); font-weight: 700;">✗ нет</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td>Параметр a для ЗРВ</td>
+                            {% for section in sections %}
+                            <td>{{ statistics[section]['param_a'] }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td>Параметр b для ЗРВ</td>
+                            {% for section in sections %}
+                            <td>{{ statistics[section]['param_b'] }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td>Коэффициент KB для ЗРВ</td>
+                            {% for section in sections %}
+                            <td>{{ statistics[section]['param_KB'] }}</td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Эпюры -->
+        <section class="section" id="epures-section">
+            <div class="section-badge section-badge--epure">
+                <span>📐</span> Эпюры
+            </div>
+            <h2>Эпюры износа</h2>
+            <div class="epures-container">
+                {% for plot_file in plot_files %}
+                {% if 'epure' in plot_file %}
+                <div class="epure-plot">
+                    <iframe src="{{ url_for('static', filename=plot_file) }}" frameborder="0" scrolling="no"
+                        loading="lazy"></iframe>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Профили лапы -->
+        <section class="section" id="profiles-section">
+            <div class="section-badge section-badge--profile">
+                <span>🔧</span> Профили
+            </div>
+            <h2>Профили лапы</h2>
+            <div class="profiles-container">
+                {% for plot_file in plot_files %}
+                {% if 'profile' in plot_file %}
+                <div class="profile-plot">
+                    <iframe src="{{ url_for('static', filename=plot_file) }}" frameborder="0" scrolling="no"
+                        loading="lazy"></iframe>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Изменение коэффициента вариации -->
+        <section class="section" id="variation-section">
+            <div class="section-badge section-badge--variation">
+                <span>📉</span> Вариация
+            </div>
+            <h2>Изменение коэффициента вариации</h2>
+            <div class="variation-plot">
+                {% for plot_file in plot_files %}
+                {% if 'variation' in plot_file %}
+                <div class="profile-plot">
+                    <iframe src="{{ url_for('static', filename=plot_file) }}" frameborder="0" scrolling="no"
+                        loading="lazy"></iframe>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Кривая накопленной вероятности -->
+        <section class="section" id="probability-section">
+            <div class="section-badge section-badge--charts">
+                <span>📈</span> Вероятность
+            </div>
+            <h2>Кривая накопленной опытной вероятности</h2>
+            <div class="probability-plot">
+                {% for plot_file in plot_files %}
+                {% if 'probability_curve' in plot_file %}
+                <div class="profile-plot">
+                    <iframe src="{{ url_for('static', filename=plot_file) }}" frameborder="0" scrolling="no"
+                        loading="lazy"></iframe>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Download & Navigation -->
+        <div class="button-container" style="margin-bottom: 60px;">
+            <a href="/download" class="download-button" id="downloadBtn">
+                <span class="icon">📥</span> Скачать Excel
+            </a>
+            <a href="/" class="back-button" id="backBtn2">← Новый расчет</a>
+        </div>
+    </div>
+
+    <script>
+        // Smooth scroll to section on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            // Observe sections for scroll animations
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.section').forEach(section => {
+                observer.observe(section);
+            });
+        });
+
+        // Theme toggle logic
+        (function initThemeToggle() {
+            const checkbox = document.getElementById('themeCheckbox');
+            const saved = localStorage.getItem('pystat-theme') || 'dark';
+            checkbox.checked = (saved === 'light');
+
+            checkbox.addEventListener('change', function () {
+                const theme = this.checked ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('pystat-theme', theme);
+            });
+        })();
+    </script>
+</body>
+
+</html>

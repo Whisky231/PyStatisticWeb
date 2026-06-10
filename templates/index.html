@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyStatistic — Расчет Статистики</title>
+    <meta name="description"
+        content="Веб-приложение для статистического анализа и визуализации данных износа культиваторных лап">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        // Apply saved theme immediately to prevent flash
+        (function () {
+            var theme = localStorage.getItem('pystat-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+</head>
+
+<body>
+    <!-- Theme toggle -->
+    <div class="theme-toggle-wrap">
+        <span class="theme-label" id="themeLabel">Тема</span>
+        <label class="theme-toggle" id="themeToggle" title="Переключить тему">
+            <input type="checkbox" id="themeCheckbox">
+            <span class="theme-toggle__track"></span>
+            <span class="theme-toggle__thumb">
+                <span class="theme-toggle__icon-moon">🌙</span>
+                <span class="theme-toggle__icon-sun">☀️</span>
+            </span>
+        </label>
+    </div>
+
+    <!-- Decorative orbs -->
+    <div class="orb orb--1"></div>
+    <div class="orb orb--2"></div>
+
+    <div class="container">
+        <header class="page-header">
+            <h1>📊 Расчет Статистики</h1>
+            <p class="page-subtitle">Статистический анализ и визуализация данных износа</p>
+        </header>
+
+        <form action="/process" method="post" id="mainForm">
+            <section class="section" id="data-input-section">
+                <div class="section-badge section-badge--stats">
+                    <span>📋</span> Ввод данных
+                </div>
+                <h2>Данные по сечениям</h2>
+
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Сечение</th>
+                            <th>Данные (через пробел)</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="data-row" data-row-index="1">
+                            <td>1.1</td>
+                            <td><input type="text" name="data_1.1" placeholder="Введите значения через пробел..."
+                                    autocomplete="off"></td>
+                            <td><button type="button" class="delete-row" onclick="deleteRow(this)"
+                                    data-tooltip="Удалить строку">✕</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="button-container">
+                    <button type="button" onclick="addRow()" class="add-row-button" id="addRowBtn">
+                        <span>＋</span> Добавить строку
+                    </button>
+                    <button type="submit" class="process-button" id="processBtn">
+                        <span>▶</span> Обработать
+                    </button>
+                </div>
+            </section>
+        </form>
+    </div>
+
+    <script>
+        let currentSection = 1;
+
+        function addRow() {
+            currentSection++;
+            const table = document.getElementById("dataTable");
+            const tbody = table.querySelector("tbody");
+            const row = document.createElement("tr");
+            row.classList.add("data-row");
+            row.setAttribute("data-row-index", currentSection);
+
+            row.innerHTML = `
+                <td>${currentSection}.${currentSection}</td>
+                <td><input type="text" name="data_${currentSection}.${currentSection}" placeholder="Введите значения через пробел..." autocomplete="off"></td>
+                <td><button type="button" class="delete-row" onclick="deleteRow(this)" data-tooltip="Удалить строку">✕</button></td>
+            `;
+
+            // Animate in
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(-10px)';
+            tbody.appendChild(row);
+
+            requestAnimationFrame(() => {
+                row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                row.style.opacity = '1';
+                row.style.transform = 'translateY(0)';
+            });
+
+            // Focus on the new input
+            const newInput = row.querySelector('input');
+            if (newInput) newInput.focus();
+        }
+
+        function deleteRow(button) {
+            const row = button.closest('tr');
+            row.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(30px)';
+
+            setTimeout(() => {
+                row.remove();
+                updateRowNumbers();
+            }, 250);
+        }
+
+        function updateRowNumbers() {
+            const table = document.getElementById("dataTable");
+            const rows = table.querySelectorAll("tbody tr");
+            currentSection = 0;
+
+            rows.forEach((row) => {
+                currentSection++;
+                const cells = row.querySelectorAll("td");
+                cells[0].innerHTML = `${currentSection}.${currentSection}`;
+                const input = cells[1].querySelector("input");
+                if (input) {
+                    input.name = `data_${currentSection}.${currentSection}`;
+                }
+            });
+        }
+
+        // Submit animation
+        document.getElementById('mainForm').addEventListener('submit', function () {
+            const btn = document.getElementById('processBtn');
+            btn.innerHTML = '<span class="spinner"></span> Обработка...';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+        });
+
+        // Keyboard shortcut: Ctrl+Enter to submit
+        document.addEventListener('keydown', function (e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                document.getElementById('mainForm').submit();
+            }
+        });
+
+        // Theme toggle logic
+        (function initThemeToggle() {
+            const checkbox = document.getElementById('themeCheckbox');
+            const saved = localStorage.getItem('pystat-theme') || 'dark';
+            checkbox.checked = (saved === 'light');
+
+            checkbox.addEventListener('change', function () {
+                const theme = this.checked ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('pystat-theme', theme);
+            });
+        })();
+    </script>
+</body>
+
+</html>
