@@ -52,7 +52,7 @@
             <h2>Графики распределения</h2>
             <div class="plots-container">
                 {% for plot_file in plot_files %}
-                {% if 'variation' not in plot_file and 'epure' not in plot_file and 'profile' not in plot_file and
+                {% if 'epure' not in plot_file and 'profile' not in plot_file and
                 'probability_curve' not in plot_file %}
                 <div class="plot">
                     <iframe src="{{ url_for('static', filename=plot_file) }}" frameborder="0" scrolling="no"
@@ -214,24 +214,6 @@
             <div class="profiles-container">
                 {% for plot_file in plot_files %}
                 {% if 'profile' in plot_file %}
-                <div class="profile-plot">
-                    <iframe src="{{ url_for('static', filename=plot_file) }}" frameborder="0" scrolling="no"
-                        loading="lazy"></iframe>
-                </div>
-                {% endif %}
-                {% endfor %}
-            </div>
-        </section>
-
-        <!-- Изменение коэффициента вариации -->
-        <section class="section" id="variation-section">
-            <div class="section-badge section-badge--variation">
-                <span>📉</span> Вариация
-            </div>
-            <h2>Изменение коэффициента вариации</h2>
-            <div class="variation-plot">
-                {% for plot_file in plot_files %}
-                {% if 'variation' in plot_file %}
                 <div class="profile-plot">
                     <iframe src="{{ url_for('static', filename=plot_file) }}" frameborder="0" scrolling="no"
                         loading="lazy"></iframe>

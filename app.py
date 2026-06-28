@@ -274,52 +274,6 @@ def process():
         fig1.write_html(os.path.join('static', plot_file), include_plotlyjs='cdn')
         plot_files.append(plot_file)
 
-        # График Pi
-        fig2 = go.Figure(data=[
-            go.Bar(
-                x=[f"{round(i[0], 3)}-{round(i[1], 3)}" for i in interval],
-                y=Pi,
-                marker_color='rgb(142,124,195)',
-                marker_line_color='rgb(70,51,126)',
-                marker_line_width=1.5,
-                opacity=0.6
-            )
-        ])
-        fig2.update_layout(
-            title=dict(text=f'Распределение Pi — Сечение {section}', font=PLOTLY_TITLE_FONT),
-            xaxis_title=dict(text='Интервалы', font=PLOTLY_AXIS_FONT),
-            yaxis_title=dict(text='Pi', font=PLOTLY_AXIS_FONT),
-            font=PLOTLY_FONT,
-            plot_bgcolor='white',
-            showlegend=False,
-            bargap=0.1,
-            width=1100,
-            height=600,
-            margin=dict(t=80, b=70, l=80, r=50),
-            xaxis=dict(
-                showgrid=True,
-                gridwidth=1,
-                gridcolor='rgb(220,220,220)',
-                tickfont=PLOTLY_TICK_FONT
-            ),
-            yaxis=dict(
-                showgrid=True,
-                gridwidth=1,
-                gridcolor='rgb(220,220,220)',
-                zeroline=True,
-                zerolinewidth=2,
-                zerolinecolor='rgba(0,0,0,0.3)',
-                tickfont=PLOTLY_TICK_FONT
-            )
-        )
-        plot_file = f'{section.replace(".", "_")}_plot2.html'
-        fig2.write_html(os.path.join('static', plot_file), include_plotlyjs='cdn')
-        plot_files.append(plot_file)
-
-        # Создаем кривую накопленной опытной вероятности
-        probability_curve_file = create_probability_curve(values, section)
-        plot_files.append(probability_curve_file)
-
 
     wb = Workbook()
     ws = wb.active
@@ -427,10 +381,6 @@ def process():
 
     # Сохраняем файл
     wb.save('static/data.xlsx')
-
-    # Создаем график изменения коэффициента вариации
-    plot_file = create_variation(statistics)
-    plot_files.append(plot_file)
 
     # Создаем и добавляем график профиля
     profile_file = create_profile(all_values, 'profile')
@@ -848,104 +798,6 @@ def create_probability_curve(data_values, section_name):
     fig.write_html(filepath, include_plotlyjs='cdn')
 
     return filename
-
-
-def create_variation(statistics):
-    # Создаем график
-    fig = go.Figure()
-
-    # Создаем массив значений для оси X (сечения)
-    x_labels = ['d₄₁', 'd₃₁', 'd₂₁', 'd₁', 'd₂₂', 'd₃₂', 'd₄₂', 'dᵢ,мм']
-
-    # Значения для примера (замените на реальные)
-    y_values = [0.185, 0.17, 0.16, 0.145, 0.15, 0.16, 0.175]
-    annotations = [
-        'Δl₄,ср=80', 'Δl₃,ср=70', 'Δl₂,ср=68', 'Δl₁,ср=77',
-        'Δl₂₂,ср=68', 'Δl₃₂,ср=72', 'Δl₄₂,ср=84'
-    ]
-
-    # Добавляем вертикальные линии сетки (синие)
-    for i in range(len(x_labels)):
-        fig.add_shape(
-            type="line",
-            x0=i, x1=i,
-            y0=0.14, y1=0.19,
-            line=dict(color="blue", width=1)
-        )
-
-    # Добавляем горизонтальные линии сетки (черные)
-    for i in np.arange(0.14, 0.19, 0.01):
-        fig.add_shape(
-            type="line",
-            x0=0, x1=len(x_labels) - 1,
-            y0=i, y1=i,
-            line=dict(color="black", width=1)
-        )
-
-    # Добавляем кривую изменения коэффициента вариации
-    x_smooth = np.linspace(0, len(y_values) - 1, 100)
-    y_smooth = make_interp_spline(range(len(y_values)), y_values)(x_smooth)
-
-    fig.add_trace(go.Scatter(
-        x=x_smooth,
-        y=y_smooth,
-        mode='lines',
-        line=dict(color='#2E86C1', width=3),
-        name='Коэффициент вариации'
-    ))
-
-    # Добавляем подписи значений
-    for i, (y, annotation) in enumerate(zip(y_values, annotations)):
-        # Добавляем наклонную линию
-        fig.add_shape(
-            type="line",
-            x0=i, x1=i + 0.3,
-            y0=y, y1=y + 0.005,
-            line=dict(color="black", width=1)
-        )
-        # Добавляем текст
-        fig.add_annotation(
-            x=i + 0.3, y=y + 0.005,
-            text=annotation,
-            showarrow=False,
-            font=dict(size=20, family='Inter, Arial, sans-serif'),
-            xanchor="left",
-            yanchor="bottom"
-        )
-
-    # Настраиваем внешний вид
-    fig.update_layout(
-        title=dict(text='Изменение коэффициента вариации', font=PLOTLY_TITLE_FONT),
-        xaxis_title=dict(text='Расстояние, мм', font=PLOTLY_AXIS_FONT),
-        yaxis_title=dict(text='V', font=PLOTLY_AXIS_FONT),
-        font=PLOTLY_FONT,
-        plot_bgcolor='white',
-        showlegend=False,
-        xaxis=dict(
-            range=[-0.5, len(x_labels) - 0.5],
-            ticktext=x_labels,
-            tickvals=list(range(len(x_labels))),
-            showgrid=False,
-            zeroline=False,
-            tickfont=dict(size=20, family='Inter, Arial, sans-serif')
-        ),
-        yaxis=dict(
-            range=[0.14, 0.19],
-            tickformat='.2f',
-            showgrid=False,
-            zeroline=False,
-            dtick=0.01,
-            tickfont=dict(size=20, family='Inter, Arial, sans-serif')
-        ),
-        margin=dict(t=80, l=80, r=50, b=70),
-        height=550,
-        width=1100
-    )
-
-    # Сохраняем график
-    plot_file = 'variation.html'
-    fig.write_html(os.path.join('static', plot_file), include_plotlyjs='cdn')
-    return plot_file
 
 
 @app.route('/download')

@@ -99,7 +99,6 @@
                 <td><button type="button" class="delete-row" onclick="deleteRow(this)" data-tooltip="Удалить строку">✕</button></td>
             `;
 
-            // Animate in
             row.style.opacity = '0';
             row.style.transform = 'translateY(-10px)';
             tbody.appendChild(row);
@@ -110,7 +109,6 @@
                 row.style.transform = 'translateY(0)';
             });
 
-            // Focus on the new input
             const newInput = row.querySelector('input');
             if (newInput) newInput.focus();
         }
@@ -143,22 +141,103 @@
             });
         }
 
-        // Submit animation
+        // Сохранение истории введённых значений (при отправке формы)
+        function saveHistory() {
+            const inputs = document.querySelectorAll('#dataTable tbody input[type="text"]');
+            let history = {};
+            try {
+                history = JSON.parse(localStorage.getItem('pystat-history') || '{}');
+            } catch (e) { history = {}; }
+
+            inputs.forEach(input => {
+                const val = input.value.trim();
+                if (!val) return;
+                if (!history[input.name]) history[input.name] = [];
+                // Добавляем только если такого значения ещё нет в истории
+                if (!history[input.name].includes(val)) {
+                    history[input.name].unshift(val);
+                    // Храним максимум 10 последних значений
+                    if (history[input.name].length > 10) history[input.name].pop();
+                }
+            });
+
+            localStorage.setItem('pystat-history', JSON.stringify(history));
+        }
+
+        // Показать меню истории при двойном клике
+        function showHistoryMenu(input) {
+            // Удаляем предыдущее меню, если есть
+            const old = document.querySelector('.history-menu');
+            if (old) old.remove();
+
+            let history = {};
+            try {
+                history = JSON.parse(localStorage.getItem('pystat-history') || '{}');
+            } catch (e) { return; }
+
+            const items = history[input.name];
+            if (!items || items.length === 0) return;
+
+            const menu = document.createElement('div');
+            menu.className = 'history-menu';
+
+            items.forEach(val => {
+                const item = document.createElement('div');
+                item.textContent = val;
+                item.addEventListener('click', () => {
+                    input.value = val;
+                    menu.remove();
+                });
+                menu.appendChild(item);
+            });
+
+            // Позиционируем меню под инпутом
+            const rect = input.getBoundingClientRect();
+            menu.style.left = rect.left + 'px';
+            menu.style.top = rect.bottom + 4 + 'px';
+            menu.style.width = Math.max(rect.width, 200) + 'px';
+
+            document.body.appendChild(menu);
+
+            // Закрыть по клику вне меню
+            setTimeout(() => {
+                document.addEventListener('click', function closeMenu(e) {
+                    if (!menu.contains(e.target) && e.target !== input) {
+                        menu.remove();
+                        document.removeEventListener('click', closeMenu);
+                    }
+                });
+            }, 0);
+        }
+
+        // Submit
         document.getElementById('mainForm').addEventListener('submit', function () {
+            saveHistory();
             const btn = document.getElementById('processBtn');
             btn.innerHTML = '<span class="spinner"></span> Обработка...';
             btn.disabled = true;
             btn.style.opacity = '0.7';
         });
 
-        // Keyboard shortcut: Ctrl+Enter to submit
+        // Двойной клик на инпуте — показать историю
+        document.addEventListener('dblclick', function (e) {
+            if (e.target.tagName === 'INPUT' && e.target.type === 'text' && e.target.closest('#dataTable')) {
+                showHistoryMenu(e.target);
+            }
+        });
+
+        // Закрыть меню по Escape
         document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                const menu = document.querySelector('.history-menu');
+                if (menu) menu.remove();
+            }
             if (e.ctrlKey && e.key === 'Enter') {
                 document.getElementById('mainForm').submit();
             }
         });
 
-        // Theme toggle logic
+        // Theme toggle
         (function initThemeToggle() {
             const checkbox = document.getElementById('themeCheckbox');
             const saved = localStorage.getItem('pystat-theme') || 'dark';

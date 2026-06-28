@@ -637,7 +637,6 @@ button[type="submit"]:hover {
 .plots-container,
 .epures-container,
 .profiles-container,
-.variation-plot,
 .probability-plot {
     display: flex;
     flex-direction: column;
@@ -711,9 +710,35 @@ iframe {
     color: var(--accent-cyan);
 }
 
-.section-badge--variation {
-    background: rgba(244, 63, 94, 0.12);
-    color: var(--accent-rose-light);
+/* === History dropdown menu === */
+.history-menu {
+    position: absolute;
+    z-index: 1000;
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+    max-height: 200px;
+    overflow-y: auto;
+    min-width: 200px;
+    backdrop-filter: blur(12px);
+}
+
+.history-menu div {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-glass);
+    transition: background var(--transition-fast);
+}
+
+.history-menu div:last-child {
+    border-bottom: none;
+}
+
+.history-menu div:hover {
+    background: var(--bg-card-hover);
 }
 
 /* === Data table on index page === */
