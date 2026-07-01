@@ -665,7 +665,7 @@ def create_profile(values, section_name):
 
     # Настраиваем внешний вид
     fig.update_layout(
-        title=dict(text='Профили лапы культиватора', font=PLOTLY_TITLE_FONT),
+        title=dict(text='Профиль детали', font=PLOTLY_TITLE_FONT),
         font=PLOTLY_FONT,
         plot_bgcolor='white',
         showlegend=True,
